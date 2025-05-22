@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - E-Commerce</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .product-list {
+      margin-top: 30px;
+    }
+    .product {
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+    }
+    .product h3 {
+      margin-top: 0;
+    }
+    .nav {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #007BFF;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    #logoutBtn {
+      background-color: #dc3545;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Welcome, Admin!</h1>
+
+  <div class="nav">
+    <a href="/addProduct.html">Add New Product</a>
+    <a href="/deleteProduct.html">Delete Product</a>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <div class="product-list" id="productList">
+    <h2>Product List</h2>
+    <!-- Products will be injected here -->
+  </div>
+
+  <script>
+    async function loadProducts() {
+      try {
+        const res = await fetch('/getAllProducts');
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const products = await res.json();
+
+        const productList = document.getElementById('productList');
+        if (products.length === 0) {
+          productList.innerHTML += "<p>No products available.</p>";
+        } else {
+          products.forEach(p => {
+            const div = document.createElement('div');
+            div.classList.add('product');
+            div.innerHTML = `
+              <h3>${p.productName}</h3>
+              <p><strong>Description:</strong> ${p.productDescription}</p>
+              <p><strong>Price:</strong> ₹${p.productActualPrice}</p>
+              <p><strong>Discount Price:</strong> ₹${p.productDiscountPrice}</p>
+            `;
+            productList.appendChild(div);
+          });
+        }
+      } catch (err) {
+        document.getElementById('productList').innerHTML += "<p>Error loading products.</p>";
+        console.error(err);
+      }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch('/logout', { method: 'POST' });
+        window.location.href = '/index.html';
+      } catch (err) {
+        alert("Logout failed");
+      }
+    });
+    loadProducts();
+  </script>
+
+</body>
+</html>

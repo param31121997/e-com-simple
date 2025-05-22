@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User - Product View</title>
+  <style>
+  body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 20px;
+  background: linear-gradient(to right, #ffffff, #f1fafe);
+  color: #333;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #0097a7;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+th {
+  background-color: #80deea;
+  color: #004d40;
+  padding: 12px;
+}
+
+td {
+  padding: 12px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background-color: #26c6da;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0097a7;
+}
+
+a {
+  color: #0288d1;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 25px;
+      border-radius: 10px;
+      width: 400px;
+      position: relative;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h3 {
+      text-align: center;
+      color: #00796b;
+    }
+
+    .modal-content input,
+    .modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .message {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Welcome, User</h2>
+  <p>Browse our amazing products and submit any queries you may have!</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>S.No.</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Actual Price</th>
+        <th>Discount Price</th>
+        <th>Query</th>
+      </tr>
+    </thead>
+    <tbody id="productTableBody">
+      <!-- Dynamic content -->
+    </tbody>
+  </table>
+
+  <div style="text-align: center; margin-top: 30px;">
+    <a href="/logout">Logout</a>
+  </div>
+
+  <!-- Modal -->
+  <div id="queryModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3>Submit Your Query</h3>
+      <input type="text" id="queryName" placeholder="Your Name" required />
+      <input type="email" id="queryEmail" placeholder="Your Email" required />
+      <textarea id="queryText" placeholder="Your Question" rows="4" required></textarea>
+      <button onclick="submitQuery()">Submit Query</button>
+      <div id="queryMessage" class="message"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentProductId = null;
+
+    function openModal(productId) {
+      currentProductId = productId;
+      document.getElementById('queryModal').style.display = 'flex';
+      document.getElementById('queryName').value = '';
+      document.getElementById('queryEmail').value = '';
+      document.getElementById('queryText').value = '';
+      document.getElementById('queryMessage').textContent = '';
+    }
+
+    function closeModal() {
+      document.getElementById('queryModal').style.display = 'none';
+    }
+
+    async function submitQuery() {
+      const name = document.getElementById('queryName').value.trim();
+      const email = document.getElementById('queryEmail').value.trim();
+      const text = document.getElementById('queryText').value.trim();
+      const messageDiv = document.getElementById('queryMessage');
+
+      if (!name || !email || !text) {
+        messageDiv.className = 'message error';
+        messageDiv.textContent = 'All fields are required.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/user/submitProductQuery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: currentProductId, name, email, query: text })
+        });
+
+        if (response.ok) {
+          messageDiv.className = 'message success';
+          messageDiv.textContent = 'Your query submitted successfully!';
+          setTimeout(closeModal, 2000);
+        } else {
+          messageDiv.className = 'message error';
+          messageDiv.textContent = 'Failed to submit query.';
+        }
+      } catch (err) {
+        messageDiv.className = 'message error';
+        messageDiv.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/getAllProducts');
+        const products = await res.json();
+        const tableBody = document.getElementById('productTableBody');
+        tableBody.innerHTML = '';
+
+        products.forEach((p, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${p.productName}</td>
+            <td>${p.productDescription}</td>
+            <td>₹${p.productActualPrice}</td>
+            <td>₹${p.productDiscountPrice}</td>
+            <td><button onclick="openModal(${p.id})">Ask Question</button></td>
+          `;
+          tableBody.appendChild(row);
+        });
+      } catch (error) {
+        alert('Failed to load products.');
+      }
+    }
+
+    fetchProducts();
+  </script>
+
+</body>
+</html>

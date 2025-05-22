@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title id="pageTitle">Add Product</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9fafc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .form-container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.07);
+      width: 400px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #222;
+    }
+    form input,
+    form textarea {
+      width: 100%;
+      margin: 12px 0;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    form textarea {
+      min-height: 90px;
+    }
+    button {
+      width: 100%;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 12px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .message {
+      margin-top: 12px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+    .message.success {
+      color: #28a745;
+    }
+    .message.error {
+      color: #dc3545;
+    }
+    .back-link {
+      display: block;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #007bff;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+      color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <a href="admin.html" class="back-link">&larr; Back to Admin Dashboard</a>
+    <h1 id="formTitle">Add New Product</h1>
+
+    <form id="productForm">
+      <input type="hidden" id="productId" />
+      <input type="text" id="productName" placeholder="Product Name" required />
+      <textarea id="productDescription" placeholder="Product Description" required></textarea>
+      <input type="number" id="productActualPrice" placeholder="Actual Price" required min="0" step="0.01" />
+      <input type="number" id="productDiscountPrice" placeholder="Discount Price" required min="0" step="0.01" />
+      <button type="submit" id="submitBtn">Add Product</button>
+      <div id="formMessage" class="message"></div>
+    </form>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+
+    const pageTitle = document.getElementById('pageTitle');
+    const formTitle = document.getElementById('formTitle');
+    const submitBtn = document.getElementById('submitBtn');
+    const formMessage = document.getElementById('formMessage');
+    const productForm = document.getElementById('productForm');
+
+    if (productId) {
+      // Edit mode
+      pageTitle.textContent = 'Edit Product';
+      formTitle.textContent = 'Edit Product';
+      submitBtn.textContent = 'Update Product';
+
+      // Load product data
+      fetch(`/admin/getProductDetailsById/${productId}`, { credentials: 'include' })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to load product');
+          return res.json();
+        })
+        .then(product => {
+          document.getElementById('productId').value = product.id;
+          document.getElementById('productName').value = product.productName;
+          document.getElementById('productDescription').value = product.productDescription;
+          document.getElementById('productActualPrice').value = product.productActualPrice;
+          document.getElementById('productDiscountPrice').value = product.productDiscountPrice;
+        })
+        .catch(err => {
+          formMessage.textContent = err.message;
+          formMessage.className = 'message error';
+        });
+    }
+
+    productForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const product = {
+        id: productId ? parseInt(productId) : null,
+        productName: document.getElementById('productName').value.trim(),
+        productDescription: document.getElementById('productDescription').value.trim(),
+        productActualPrice: parseFloat(document.getElementById('productActualPrice').value),
+        productDiscountPrice: parseFloat(document.getElementById('productDiscountPrice').value),
+      };
+
+      const url = productId ? `/admin/updateProduct` : '/admin/addNewProduct';
+      const method = productId ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(product),
+        });
+
+        if (!res.ok) throw new Error('Failed to save product');
+
+        formMessage.textContent = productId ? 'Product updated successfully!' : 'Product added successfully!';
+        formMessage.className = 'message success';
+
+        setTimeout(() => {
+          window.location.href = 'admin.html';
+        }, 1500);
+      } catch (err) {
+        formMessage.textContent = err.message;
+        formMessage.className = 'message error';
+      }
+    });
+  </script>
+
+</body>
+</html>

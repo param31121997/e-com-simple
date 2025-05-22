@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Customer Queries</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f9fc;
+      margin: 0;
+      padding: 40px 20px;
+      max-width: 1000px;
+      margin: 40px auto;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #444;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eaeaea;
+    }
+
+    th {
+      background-color: #e3f2fd;
+      color: #333;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background-color: #f1f9ff;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fcfcfc;
+    }
+
+    a.back-link {
+      display: inline-block;
+      margin-top: 25px;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: 500;
+    }
+
+    a.back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Customer Queries</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Query</th>
+      </tr>
+    </thead>
+    <tbody id="queryTableBody">
+      <!-- Dynamic content -->
+    </tbody>
+  </table>
+
+  <a href="admin.html" class="back-link">← Back to Admin Dashboard</a>
+
+  <script>
+    async function fetchQueries() {
+      try {
+        const res = await fetch('/admin/getAllProductQuery'); // Adjust backend endpoint if needed
+        const queries = await res.json();
+        const tableBody = document.getElementById('queryTableBody');
+        tableBody.innerHTML = '';
+
+        queries.forEach((q, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${q.name}</td>
+            <td>${q.email}</td>
+            <td>${q.query}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      } catch (err) {
+        console.error("Failed to fetch queries:", err);
+      }
+    }
+
+    fetchQueries();
+  </script>
+
+</body>
+</html>
